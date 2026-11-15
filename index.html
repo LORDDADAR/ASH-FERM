@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7efdf">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Тёплая ферма">
+  <title>Тёплая ферма</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./game.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <span class="brand"><img src="./icon-192.png" alt=""> Тёплая ферма</span>
+      <div class="balance"><span aria-hidden="true">●</span> <strong id="coins">0</strong><span class="sr"> монет</span></div>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="hero">
+      <div class="landscape" aria-hidden="true"><i class="sun"></i><i class="hill far"></i><i class="hill near"></i><i class="hill front"></i><i class="house"></i><i class="tree"></i></div>
+      <div class="hero-copy"><h1>Тёплая ферма</h1><p>Посейте семена, соберите урожай<br>и выполните заказы соседей.</p></div>
+    </section>
+    <div class="layout">
+      <div class="farm">
+        <section aria-labelledby="field-title">
+          <div class="heading"><h2 id="field-title">Грядки</h2><span id="open-beds"></span></div>
+          <p class="hint">Выберите семена и коснитесь свободной грядки.</p>
+          <div id="seeds" class="seeds" aria-label="Выбор семян"></div>
+          <div id="beds" class="beds"></div>
+        </section>
+        <section class="animals-section" aria-labelledby="animals-title">
+          <div class="heading"><h2 id="animals-title">Животные</h2></div>
+          <div id="animals" class="animals"></div>
+        </section>
+      </div>
+      <aside aria-label="Запасы и заказы">
+        <details class="panel" open><summary>🧺 Склад</summary><div id="storage"></div></details>
+        <details class="panel" open><summary>📌 Заказы соседей <span id="order-count"></span></summary><div id="orders"></div></details>
+        <details class="panel"><summary>🌱 Лавка семян</summary><div id="shop"></div></details>
+      </aside>
+    </div>
+    <footer><span id="offline" role="status" hidden>● Можно играть офлайн</span><span id="save-note">Прогресс хранится на этом устройстве</span></footer>
+  </main>
+  <div id="notice" role="status"></div>
+</body>
+</html>
