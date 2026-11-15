@@ -1,7 +1,7 @@
 const crops = {
-  wheat: { name: 'Пшеница', icon: '🌾', time: 18, cost: 2, price: 4 },
-  carrot: { name: 'Морковь', icon: '🥕', time: 24, cost: 3, price: 6 },
-  clover: { name: 'Клевер', icon: '🍀', time: 30, cost: 4, price: 7 },
+  wheat: { name: 'Пшеница', time: 16, cost: 2, price: 4, yield: 1 },
+  carrot: { name: 'Морковь', time: 36, cost: 5, price: 7, yield: 2 },
+  clover: { name: 'Клевер', time: 24, cost: 3, price: 5, yield: 1 },
 };
 const goods = {
   ...crops,
@@ -12,27 +12,62 @@ const animals = {
   hen: { name: 'Курица', icon: '🐔', feed: 'wheat', food: 'пшеницей', product: 'egg', time: 20 },
   cow: { name: 'Корова', icon: '🐄', feed: 'clover', food: 'клевером', product: 'milk', time: 30, cost: 60 },
 };
-const orders = [
-  { name: 'Морковь для супа', need: { carrot: 2 }, reward: 20 },
-  { name: 'Завтрак у соседей', need: { egg: 1, wheat: 1 }, reward: 26 },
-  { name: 'Обед с фермы', need: { milk: 1, carrot: 1 }, reward: 38 },
-];
-const bedCosts = [0, 0, 0, 0, 28, 42];
+const market = {
+  quick: { label: 'Быстрый заказ', offers: [
+    { name: 'Хлеб к завтраку', need: { wheat: 2 }, reward: 16 },
+    { name: 'Мука для пекарни', need: { wheat: 3 }, reward: 22 },
+    { name: 'Пшеница для мельницы', need: { wheat: 4 }, reward: 29 },
+  ] },
+  mixed: { label: 'Средний заказ', offers: [
+    { name: 'Обед для соседей', need: { wheat: 2, carrot: 2 }, reward: 32 },
+    { name: 'Ящик для трактирщика', need: { carrot: 4, clover: 2 }, reward: 56 },
+    { name: 'Сбор для ярмарки', need: { wheat: 3, clover: 2 }, reward: 36 },
+  ] },
+  large: { label: 'Большой заказ', offers: [
+    { name: 'Провизия на неделю', need: { wheat: 3, carrot: 4, clover: 2 }, reward: 72 },
+    { name: 'Поставка на мельницу', need: { wheat: 6, carrot: 2, clover: 2 }, reward: 74 },
+    { name: 'Урожай для трактира', need: { wheat: 2, carrot: 6, clover: 3 }, reward: 98 },
+  ] },
+  special: { label: 'Особый покупатель', offers: [
+    { name: 'Лавка Агаты', need: { carrot: 4, clover: 3, egg: 1 }, reward: 99 },
+    { name: 'Ярмарка Агаты', need: { carrot: 4, wheat: 3, clover: 3 }, reward: 108 },
+    { name: 'Запасы Агаты', need: { carrot: 6, wheat: 3, clover: 4 }, reward: 138 },
+  ] },
+};
+const specialReputation = 3;
+const bedCosts = [0, 0, 0, 0, 36, 58];
+const wateringCost = 44;
+const initialMarket = () => ({
+  positions: { quick: 0, mixed: 0, large: 0, special: 0 },
+  active: null,
+  reputation: 0,
+});
+const getOffer = (save, slot) => {
+  const offers = market[slot].offers;
+  const position = save.market.positions[slot];
+  return { ...offers[position % offers.length], id: `${slot}-${position}` };
+};
 const key = 'warm-farm:v1:' + new URL('./', location.href).pathname;
 const byId = id => document.getElementById(id);
 const initial = () => ({
   coins: 18,
-  seeds: { wheat: 3, carrot: 3, clover: 1 },
+  seeds: { wheat: 5, carrot: 3, clover: 2 },
   stock: { wheat: 0, carrot: 0, clover: 0, egg: 0, milk: 0 },
   beds: bedCosts.map(cost => ({ open: !cost, crop: null })),
   animals: { hen: { open: true, readyAt: 0 }, cow: { open: false, readyAt: 0 } },
   completed: [],
+  market: initialMarket(),
+  wateringUpgrade: false,
 });
 
 function load() {
   try {
     const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : initial();
+    if (!saved) return initial();
+    const save = JSON.parse(saved);
+    save.market ??= { ...initialMarket(), reputation: save.completed?.length ?? 0 };
+    save.wateringUpgrade ??= false;
+    return save;
   } catch {
     return initial();
   }
@@ -44,6 +79,9 @@ let noticeTimer;
 const button = (label, action, id, disabled = false, extra = '') =>
   `<button type="button" data-action="${action}" data-id="${id}" ${disabled ? 'disabled' : ''} ${extra}>${label}</button>`;
 const timer = readyAt => `<span class="timer" data-ready="${readyAt}"></span>`;
+const art = (id, extra = '') => `<span class="art art-${id} ${extra}" aria-hidden="true"></span>`;
+const itemArt = id => crops[id] ? art(id) : goods[id].icon;
+const hasItems = (save, need) => Object.entries(need).every(([id, count]) => save.stock[id] >= count);
 
 function refresh(id, markup) {
   const container = byId(id);
@@ -62,14 +100,16 @@ function render() {
   byId('coins').textContent = state.coins;
   byId('open-beds').textContent = `${state.beds.filter(bed => bed.open).length} из 6 открыто`;
   refresh('seeds', Object.entries(crops).map(([id, crop]) =>
-    button(`<span>${crop.icon} ${crop.name}</span><b>${state.seeds[id]}</b>`, 'select', id, false,
+    button(`<span class="seed-name">${art(id)} ${crop.name}</span><b>${state.seeds[id]}</b><small>${crop.time} сек · +${crop.yield} шт.</small>`, 'select', id, false,
       `aria-pressed="${selected === id}"`)).join(''));
 
   refresh('beds', state.beds.map((bed, i) => {
-    let art = '', status, control, kind = 'empty';
+    let sprite = 'soil', status, control, kind = 'empty';
     if (!bed.open) {
-      kind = 'locked'; art = '🔒'; status = 'Закрыта';
-      control = button(`Открыть · ${bedCosts[i]} ●`, 'unlockBed', i, state.coins < bedCosts[i]);
+      kind = 'locked';
+      sprite = 'locked';
+      status = 'Закрыта';
+      control = '<a class="plot-link" href="#upgrades-panel">Расширение</a>';
     } else if (!bed.crop) {
       status = 'Свободна';
       control = button('Посадить', 'plant', i, state.seeds[selected] === 0,
@@ -77,12 +117,12 @@ function render() {
     } else {
       const ready = bed.readyAt <= now;
       kind = ready ? 'ripe' : 'growing';
-      art = ready ? crops[bed.crop].icon : '🌱';
+      sprite = ready ? `ripe-${bed.crop}` : 'sprout';
       status = ready ? `${crops[bed.crop].name} · готово` : `${crops[bed.crop].name} · ${timer(bed.readyAt)}`;
       control = ready ? button('Собрать', 'harvest', i)
-        : button(bed.watered ? 'Полито' : '💧 Полить', 'water', i, bed.watered);
+        : button(bed.watered ? 'Полито' : `${art('can')} Полить`, 'water', i, bed.watered);
     }
-    return `<article class="bed ${kind}"><div class="soil"><span class="bed-number">${i + 1}</span><span class="sprout" aria-hidden="true">${art}</span></div><div class="bed-body"><div>${status}</div>${control}</div></article>`;
+    return `<article class="bed ${kind}"><div class="plot"><span class="bed-number">${i + 1}</span>${art(sprite, 'plot-art')}</div><div class="bed-body"><div>${status}</div>${control}</div></article>`;
   }).join(''));
 
   refresh('animals', Object.entries(animals).map(([id, animal]) => {
@@ -98,32 +138,66 @@ function render() {
       status = `${goods[animal.product].name} · готово`;
       control = button(`Забрать ${goods[animal.product].icon}`, 'collect', id);
     } else {
-      status = `Корм · ${goods[animal.feed].icon} ${state.stock[animal.feed]}`;
+      status = `Корм · ${itemArt(animal.feed)} ${state.stock[animal.feed]}`;
       control = button(`Кормить ${animal.food}`, 'feed', id, state.stock[animal.feed] === 0);
     }
     return `<article class="animal ${id}"><span class="animal-icon" aria-hidden="true">${animal.icon}</span><div class="animal-info"><h3>${animal.name}</h3><div>${status}</div>${control}</div></article>`;
   }).join(''));
 
-  refresh('storage', Object.entries(goods).map(([id, item]) => `<div class="row"><span>${item.icon} ${item.name} <b>×${state.stock[id]}</b></span>${
+  refresh('storage', Object.entries(goods).map(([id, item]) => `<div class="row"><span>${itemArt(id)} ${item.name} <b>×${state.stock[id]}</b></span>${
     button(`${item.price} ●`, 'sell', id, !state.stock[id], `aria-label="Продать: ${item.name} за ${item.price} монет"`)
   }</div>`).join(''));
 
-  byId('order-count').textContent = `${state.completed.length}/${orders.length}`;
-  refresh('orders', orders.map(({ name, need, reward }, i) => {
-    const done = state.completed.includes(i);
-    const locked = i !== state.completed.length;
-    const enough = Object.entries(need).every(([id, count]) => state.stock[id] >= count);
-    const items = Object.entries(need).map(([id, count]) => `${goods[id].icon} ${goods[id].name} ×${count}`).join(' · ');
-    return `<article class="order"><h3>${name}</h3><p>${items}</p>${done
-      ? '<span class="done">✓ Выполнен</span>'
-      : button(locked ? 'После предыдущего заказа' : `Сдать · +${reward} ●`, 'order', i, locked || !enough)}</article>`;
-  }).join(''));
+  renderMarket();
+  const nextBed = state.beds.findIndex(bed => !bed.open);
+  refresh('upgrades', `<article class="upgrade">${art('locked', 'upgrade-art')}<div><h3>Расширение поля</h3><p>${nextBed < 0 ? 'Все грядки открыты' : `Откроет грядку №${nextBed + 1}`}</p>${
+    nextBed < 0 ? '' : button(`Купить · ${bedCosts[nextBed]} ●`, 'unlockBed', nextBed, state.coins < bedCosts[nextBed])
+  }</div></article><article class="upgrade">${art('can', 'upgrade-art')}<div><h3>Улучшенная лейка</h3><p>Полив сокращает оставшееся время на 45% вместо 25%.</p>${
+    state.wateringUpgrade ? '<span class="done">Куплено</span>' : button(`Купить · ${wateringCost} ●`, 'upgradeWater', 'can', state.coins < wateringCost)
+  }</div></article>`);
 
   refresh('shop', Object.entries(crops).map(([id, crop]) =>
-    `<div class="row"><span>${crop.icon} ${crop.name}</span>${button(`Купить · ${crop.cost} ●`, 'buy', id, state.coins < crop.cost)}</div>`
+    `<div class="row"><span>${art(id)} ${crop.name}</span>${button(`Купить · ${crop.cost} ●`, 'buy', id, state.coins < crop.cost)}</div>`
   ).join('') + '<p class="hint">Если запасы иссякли, возьмите семя пшеницы бесплатно.</p>' +
     button('Взять семя', 'rescue', 'wheat', !canRescue(state)));
   tick();
+}
+
+function renderMarket() {
+  const { reputation, active } = state.market;
+  const slots = Object.keys(market).filter(slot => slot !== 'special' || reputation >= specialReputation);
+  byId('order-count').textContent = `Репутация · ${reputation}`;
+  byId('market-progress').textContent = reputation < specialReputation
+    ? `До особого покупателя — заказов: ${specialReputation - reputation}`
+    : 'Особый покупатель открыт';
+  refresh('orders', slots.map(slot => {
+    const { id, name, need, reward } = getOffer(state, slot);
+    const accepted = active === slot;
+    const items = Object.entries(need).map(([item, count]) =>
+      `<li>${itemArt(item)} <span>${goods[item].name}</span><b>${state.stock[item]} / ${count}</b></li>`).join('');
+    return `<article class="order ${accepted ? 'accepted' : ''}"><div class="order-meta"><span>${market[slot].label}</span><strong>+${reward} ●</strong></div>
+      <h3>${name}</h3><ul aria-label="В амбаре / нужно">${items}</ul>
+      <div class="order-actions">${accepted
+        ? button('Сдать заказ', 'order', id, !hasItems(state, need)) + button('Отменить', 'cancelOrder', id)
+        : button('Взять заказ', 'takeOrder', id, Boolean(active))}</div></article>`;
+  }).join(''));
+
+  const tutorial = byId('tutorial');
+  tutorial.hidden = reputation > 0;
+  if (tutorial.hidden) return;
+  if (!active) {
+    tutorial.innerHTML = 'Начните с <a href="#market-panel">быстрого заказа на рынке</a>.';
+    return;
+  }
+  const { need } = getOffer(state, active);
+  const missing = Object.entries(need).filter(([id, count]) => state.stock[id] < count);
+  const ready = missing.some(([id]) => state.beds.some(bed => bed.crop === id && bed.readyAt <= Date.now()));
+  const toPlant = missing.filter(([id, count]) => state.stock[id] +
+    state.beds.filter(bed => bed.crop === id).reduce((total, bed) => total + (bed.yield ?? 1), 0) < count);
+  tutorial.innerHTML = !missing.length ? 'Урожай в амбаре. <a href="#market-panel">Сдайте заказ на рынке</a>.'
+    : ready ? 'Урожай созрел. Нажмите «Собрать» на грядке.'
+    : toPlant.length ? `Посадите недостающие культуры: ${toPlant.map(([id]) => goods[id].name.toLowerCase()).join(', ')}. <a href="#seed-shop">Купить семена</a>.`
+    : 'Урожай растёт. Полейте грядки, чтобы собрать его раньше.';
 }
 
 function canRescue(save) {
@@ -166,22 +240,30 @@ function transact(action, id) {
     case 'plant':
       if (!bed?.open || bed.crop || !save.seeds[selected]) return;
       save.seeds[selected]--;
-      Object.assign(bed, { crop: selected, readyAt: now + crops[selected].time * 1000, watered: false });
+      Object.assign(bed, {
+        crop: selected, readyAt: now + crops[selected].time * 1000,
+        yield: crops[selected].yield, watered: false,
+      });
       break;
     case 'water':
       if (!bed?.crop || bed.watered || bed.readyAt <= now) return;
-      bed.readyAt = now + Math.round((bed.readyAt - now) * 0.75);
+      bed.readyAt = now + Math.round((bed.readyAt - now) * (save.wateringUpgrade ? 0.55 : 0.75));
       bed.watered = true;
       break;
     case 'harvest':
       if (!bed?.crop || bed.readyAt > now) return;
-      save.stock[bed.crop]++;
+      save.stock[bed.crop] += bed.yield ?? 1;
       save.beds[id] = { open: true, crop: null };
       break;
     case 'unlockBed':
-      if (!bed || bed.open || save.coins < bedCosts[id]) return;
+      if (!bed || bed.open || Number(id) !== save.beds.findIndex(plot => !plot.open) || save.coins < bedCosts[id]) return;
       save.coins -= bedCosts[id];
       bed.open = true;
+      break;
+    case 'upgradeWater':
+      if (save.wateringUpgrade || save.coins < wateringCost) return;
+      save.coins -= wateringCost;
+      save.wateringUpgrade = true;
       break;
     case 'unlockCow':
       if (save.animals.cow.open || save.coins < animals.cow.cost) return;
@@ -203,14 +285,27 @@ function transact(action, id) {
       save.stock[id]--;
       save.coins += goods[id].price;
       break;
+    case 'takeOrder':
+    case 'cancelOrder':
     case 'order': {
-      const order = orders[id];
-      if (!order || Number(id) !== save.completed.length) return;
-      const items = Object.entries(order.need);
-      if (items.some(([item, count]) => save.stock[item] < count)) return;
-      for (const [item, count] of items) save.stock[item] -= count;
-      save.coins += order.reward;
-      save.completed.push(Number(id));
+      const [slot] = id.split('-');
+      if (!Object.hasOwn(market, slot) || (slot === 'special' && save.market.reputation < specialReputation)) return;
+      const order = getOffer(save, slot);
+      if (id !== order.id) return;
+      if (action === 'takeOrder') {
+        if (save.market.active) return;
+        save.market.active = slot;
+        break;
+      }
+      if (save.market.active !== slot) return;
+      if (action === 'order') {
+        if (!hasItems(save, order.need)) return;
+        for (const [item, count] of Object.entries(order.need)) save.stock[item] -= count;
+        save.coins += order.reward;
+        save.market.reputation++;
+        save.market.positions[slot]++;
+      }
+      save.market.active = null;
       break;
     }
     default:
@@ -226,7 +321,8 @@ function transact(action, id) {
   const messages = {
     buy: 'Семя куплено', rescue: 'Семя пшеницы получено', harvest: 'Урожай на складе',
     unlockBed: 'Грядка открыта', unlockCow: 'Коровник открыт', collect: 'Продукт на складе',
-    sell: 'Товар продан', order: 'Заказ выполнен',
+    sell: 'Товар продан', order: 'Заказ выполнен · +1 репутация',
+    takeOrder: 'Заказ взят', cancelOrder: 'Заказ отменён', upgradeWater: 'Лейка улучшена',
   };
   if (messages[action]) {
     byId('notice').textContent = messages[action];
@@ -235,11 +331,12 @@ function transact(action, id) {
   }
 }
 
-document.addEventListener('click', event => {
+document.addEventListener('click', async event => {
   const item = event.target.closest('button[data-action]');
   if (!item || item.disabled) return;
   const { action, id } = item.dataset;
   if (action === 'select') selected = id;
+  else if (navigator.locks) await navigator.locks.request(key, () => transact(action, id));
   else transact(action, id);
   render();
 });

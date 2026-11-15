@@ -35,18 +35,6 @@ h1 { font-size: clamp(1.9rem, 7vw, 3.25rem); }
 h2 { font-size: 1.75rem; }
 h3, p { margin: 0; }
 .hero p { margin-top: 8px; color: #624627; font-size: .88rem; line-height: 1.45; }
-.landscape { position: absolute; inset: 0; overflow: hidden; }
-.landscape i { position: absolute; display: block; }
-.sun { right: 13%; top: 14%; width: 58px; aspect-ratio: 1; border-radius: 50%; background: #f8c363; box-shadow: 0 0 0 9px #ffe9b7; }
-.hill { border-radius: 50% 50% 0 0; }
-.far { width: 65%; height: 84%; right: -12%; bottom: -40%; background: #9aa66d; transform: rotate(-12deg); }
-.near { width: 75%; height: 75%; right: 7%; bottom: -55%; background: #758957; transform: rotate(6deg); }
-.front { width: 74%; height: 40%; right: -14%; bottom: -29%; background: #536d3c; }
-.house { right: 14%; bottom: 15%; width: 44px; height: 33px; background: #b76144; border-bottom: 3px solid #914831; box-shadow: inset 8px 0 #ca7755; }
-.house::before { content: ''; position: absolute; bottom: 100%; left: -5px; border-inline: 27px solid transparent; border-bottom: 22px solid #733e30; }
-.house::after { content: ''; position: absolute; bottom: 0; left: 18px; width: 12px; height: 19px; background: #f5d48d; border-radius: 6px 6px 0 0; }
-.tree { right: 7%; bottom: 12%; width: 6px; height: 28px; background: #744c31; }
-.tree::after { content: ''; position: absolute; bottom: 13px; left: -10px; width: 26px; height: 34px; border-radius: 50%; background: #42643d; }
 .layout { display: grid; gap: 18px; align-items: start; }
 .heading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 .heading span, .hint { color: var(--muted); font-size: .79rem; }
@@ -57,12 +45,6 @@ h3, p { margin: 0; }
 .seeds b { background: #eee0c9; padding: 1px 5px; border-radius: 6px; }
 .beds, .animals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .bed, .animal, .panel { min-width: 0; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-.soil { position: relative; height: 52px; display: grid; place-items: center; overflow: hidden; background: #e9d8aa; }
-.soil::before { content: ''; position: absolute; left: 20%; right: 12%; top: 15%; bottom: 14%; transform: skew(-18deg); border-radius: 10px; background: repeating-linear-gradient(0deg,#9c6244 0 5px,#b98259 5px 10px); box-shadow: 0 4px #76472f; }
-.locked .soil { background: #e7ddcb; }
-.locked .soil::before { filter: saturate(.35); opacity: .55; }
-.ripe .soil { background: #e7e8bb; }
-.sprout { position: relative; font-size: 1.7rem; text-shadow: 0 2px 3px #492c2c6a; }
 .bed-number { position: absolute; z-index: 1; left: 6px; top: 6px; padding: 1px 5px; border-radius: 6px; background: #fff5db; font-size: .68rem; font-weight: 750; }
 .bed-body { display: grid; gap: 4px; padding: 5px; }
 .bed-body > div { padding: 2px 1px; font-size: .75rem; color: var(--muted); }
@@ -76,7 +58,7 @@ h3, p { margin: 0; }
 .animal button { width: 100%; }
 aside { display: grid; gap: 8px; }
 summary { min-height: 46px; padding: 12px; cursor: pointer; font-weight: 800; }
-#order-count { float: right; color: var(--muted); font-size: .8rem; }
+#order-count { color: var(--muted); font-size: .8rem; }
 #storage, #orders, #shop { padding: 0 10px 10px; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 4px; border-top: 1px solid var(--line); min-height: 48px; font-size: .82rem; }
 .row button { min-width: 58px; }
@@ -89,9 +71,72 @@ footer { display: grid; gap: 4px; text-align: center; padding: 17px 0 max(17px, 
 #notice { position: fixed; z-index: 2; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); max-width: 92vw; pointer-events: none; background: #30291f; color: var(--paper); padding: 8px 14px; border-radius: 12px; font-size: .85rem; }
 #notice:empty { display: none; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.art {
+  display: inline-block; flex: none; width: 28px; aspect-ratio: 1; vertical-align: middle;
+  background-image: url('./farm-art.webp'); background-size: 400% 300%;
+  background-position: var(--art-x, 0%) var(--art-y, 0%); background-repeat: no-repeat;
+}
+.art-sprout { --art-x: 33.3333%; }
+.art-ripe-wheat { --art-x: 66.6667%; }
+.art-ripe-carrot { --art-x: 100%; }
+.art-ripe-clover { --art-y: 50%; }
+.art-wheat { --art-x: 33.3333%; --art-y: 50%; }
+.art-carrot { --art-x: 66.6667%; --art-y: 50%; }
+.art-clover { --art-x: 100%; --art-y: 50%; }
+.art-barn { --art-y: 100%; }
+.art-market { --art-x: 33.3333%; --art-y: 100%; }
+.art-can { --art-x: 66.6667%; --art-y: 100%; }
+.art-locked { --art-x: 100%; --art-y: 100%; }
+.hero { min-height: 142px; background: linear-gradient(#fae7b6 56%, #c1cb8c 56%, #a6b478); }
+.hero-copy { background: none; }
+.hero p { font-weight: 700; }
+.hero-art { position: absolute; right: 8%; bottom: 0; display: flex; align-items: end; }
+.hero-art .art { width: clamp(72px, 14vw, 137px); }
+.hero-art .art-market { margin-left: -12px; width: clamp(65px, 12vw, 117px); }
+.farm-nav { position: sticky; z-index: 2; top: 0; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--cream); gap: 4px; padding: 5px 0; margin: -10px 0 10px; }
+.farm-nav a, .plot-link { display: grid; place-items: center; min-height: 44px; border-radius: 10px; text-decoration: none; font-weight: 750; font-size: .78rem; color: var(--green); background: #fdf7eb; border: 1px solid var(--line); }
+.farm-nav a:focus-visible, .plot-link:focus-visible { outline: 3px solid #986426; outline-offset: 1px; }
+#field-title, aside > section { scroll-margin-top: 62px; }
+.tutorial { padding: 10px 14px; background: #e7edcf; border: 1px solid #c4cc9e; border-radius: 12px; margin-bottom: 12px; font-size: .9rem; }
+.tutorial a { color: #324a2a; font-weight: 750; }
+.seeds button { align-content: center; }
+.seed-name { display: inline-flex; align-items: center; gap: 2px; }
+.seed-name .art { width: 20px; }
+.seeds small { text-align: left; width: 100%; font-size: .68rem; }
+.beds { padding: 7px; border-radius: 16px; border: 1px solid #a9b17a; background: radial-gradient(ellipse at top, #d8dfac, #aebb82); }
+.bed { background: #fffaf0d9; border-color: #75865060; }
+.plot { position: relative; background: #d0d9a2; display: grid; justify-items: center; }
+.plot-art { width: min(100%, 155px); }
+.bed-body button .art { width: 21px; }
+.panel-heading { display: flex; gap: 8px; align-items: center; padding: 9px 10px 3px; }
+.panel-heading .art { width: 54px; }
+.panel-heading h2 { font-size: 1.52rem; }
+#market-progress { padding: 0 10px 9px; color: var(--muted); font-size: .8rem; }
+.order { border: 1px solid var(--line); background: #faf1df; border-radius: 11px; padding: 9px; margin-bottom: 6px; }
+.order:last-child { margin-bottom: 0; }
+.order.accepted { border: 2px solid #718256; padding: 8px; background: #eef0d8; }
+.order-meta { display: flex; justify-content: space-between; gap: 4px; margin-bottom: 4px; font-size: .74rem; color: var(--muted); }
+.order-meta strong { color: #694917; }
+.order ul { padding: 0; margin: 3px 0; list-style: none; }
+.order li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px; font-size: .8rem; }
+.order li .art { width: 24px; }
+.order li b { font-variant-numeric: tabular-nums; }
+.order-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+.order-actions button[data-action="cancelOrder"] { background: #f8efd9; color: var(--ink); border-color: var(--line); }
+#upgrades { padding: 0 10px 10px; }
+.upgrade { display: grid; grid-template-columns: auto 1fr; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.upgrade-art { width: 44px; }
+.upgrade h3 { font-size: .9rem; }
+.upgrade p { margin: 3px 0 6px; font-size: .8rem; color: var(--muted); }
+@media (min-width: 360px) and (max-width: 579px) {
+  .beds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 579px) {
+  .hero-art { right: 4%; }
+  .hero-copy { padding: 11px 13px; }
+}
 @media (min-width: 580px) {
   .beds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .soil { height: 78px; }
   .hero-copy { padding: 26px; }
 }
 @media (min-width: 760px) {

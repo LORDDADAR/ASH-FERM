@@ -9,10 +9,11 @@ const types = {
   '.js': 'text/javascript; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
   '.png': 'image/png',
+  '.webp': 'image/webp',
 };
 const files = new Set([
   'index.html', 'style.css', 'game.js', 'manifest.webmanifest',
-  'sw.js', 'icon-192.png', 'icon-512.png',
+  'sw.js', 'icon-192.png', 'icon-512.png', 'farm-art.webp',
 ]);
 
 http.createServer(async (request, response) => {

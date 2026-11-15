@@ -1,7 +1,7 @@
-const cacheName = `warm-farm:${self.registration.scope}:2`;
+const cacheName = `warm-farm:${self.registration.scope}:3`;
 const assets = [
   './', './index.html', './style.css', './game.js', './manifest.webmanifest',
-  './icon-192.png', './icon-512.png',
+  './icon-192.png', './icon-512.png', './farm-art.webp',
 ].map(path => new URL(path, self.registration.scope).href);
 
 self.addEventListener('install', event => {

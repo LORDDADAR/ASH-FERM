@@ -22,9 +22,13 @@
   </header>
   <main class="wrap">
     <section class="hero">
-      <div class="landscape" aria-hidden="true"><i class="sun"></i><i class="hill far"></i><i class="hill near"></i><i class="hill front"></i><i class="house"></i><i class="tree"></i></div>
-      <div class="hero-copy"><h1>АШ ФЕРМ</h1><p>Посейте семена, соберите урожай<br>и выполните заказы соседей.</p></div>
+      <div class="hero-art" aria-hidden="true"><span class="art art-barn"></span><span class="art art-market"></span></div>
+      <div class="hero-copy"><h1>АШ ФЕРМ</h1><p>Рынок и развитие фермы</p></div>
     </section>
+    <nav class="farm-nav" aria-label="Разделы фермы">
+      <a href="#field-title">Поле</a><a href="#market-panel">Рынок</a><a href="#barn-panel">Амбар</a><a href="#upgrades-panel">Улучшения</a>
+    </nav>
+    <p id="tutorial" class="tutorial" hidden></p>
     <div class="layout">
       <div class="farm">
         <section aria-labelledby="field-title">
@@ -39,9 +43,10 @@
         </section>
       </div>
       <aside aria-label="Запасы и заказы">
-        <details class="panel" open><summary>🧺 Склад</summary><div id="storage"></div></details>
-        <details class="panel" open><summary>📌 Заказы соседей <span id="order-count"></span></summary><div id="orders"></div></details>
-        <details class="panel"><summary>🌱 Лавка семян</summary><div id="shop"></div></details>
+        <section class="panel" id="market-panel"><header class="panel-heading"><span class="art art-market" aria-hidden="true"></span><div><h2>Рынок</h2><span id="order-count"></span></div></header><p id="market-progress"></p><div id="orders"></div></section>
+        <section class="panel" id="barn-panel"><header class="panel-heading"><span class="art art-barn" aria-hidden="true"></span><h2>Амбар</h2></header><div id="storage"></div></section>
+        <section class="panel" id="upgrades-panel"><header class="panel-heading"><span class="art art-can" aria-hidden="true"></span><h2>Улучшения</h2></header><div id="upgrades"></div></section>
+        <details class="panel" id="seed-shop"><summary>Лавка семян</summary><div id="shop"></div></details>
       </aside>
     </div>
     <footer><span id="offline" role="status" hidden>● Можно играть офлайн</span><span id="save-note">Прогресс хранится на этом устройстве</span></footer>
