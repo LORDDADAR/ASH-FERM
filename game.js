@@ -353,6 +353,7 @@ render();
 setInterval(tick, 250);
 
 if ('serviceWorker' in navigator) {
+  const hadController = Boolean(navigator.serviceWorker.controller);
   const checkOffline = () => {
     const worker = navigator.serviceWorker.controller;
     if (!worker) return;
@@ -363,6 +364,14 @@ if ('serviceWorker' in navigator) {
     };
     worker.postMessage('check-cache', [channel.port2]);
   };
-  navigator.serviceWorker.addEventListener('controllerchange', checkOffline);
-  navigator.serviceWorker.register('./sw.js').then(checkOffline).catch(console.warn);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) location.reload();
+    else checkOffline();
+  });
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(registration => {
+    checkOffline();
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) registration.update().catch(() => {});
+    });
+  }).catch(console.warn);
 }

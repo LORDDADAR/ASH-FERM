@@ -1,4 +1,4 @@
-const cacheName = `warm-farm:${self.registration.scope}:3`;
+const cacheName = `warm-farm:${self.registration.scope}:4`;
 const assets = [
   './', './index.html', './style.css', './game.js', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './farm-art.webp',
@@ -8,6 +8,7 @@ self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(cacheName);
     await cache.addAll(assets.map(url => new Request(url, { cache: 'reload' })));
+    await self.skipWaiting();
   })());
 });
 
