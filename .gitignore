@@ -1,0 +1,13 @@
+# Secrets and private local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local dependencies, logs and editor files
+node_modules/
+*.log
+.DS_Store
+.idea/
+.vscode/
